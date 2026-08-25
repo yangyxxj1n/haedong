@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚖️ 인구 문제 밸런스 게임</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0b0f19',
+                            card: '#161c2e',
+                            border: '#2a344d',
+                            accent: '#6366f1',
+                            neonA: '#38bdf8',
+                            neonB: '#f43f5e',
+                            green: '#10b981'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            user-select: none;
+        }
+        .neon-glow-a {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+        }
+        .neon-glow-b {
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.35);
+        }
+        .pulse-slow {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .bar-transition {
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a344d;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 overflow-x-hidden">
+
+    <!-- Offline & Config Status Banners -->
+    <div id="network-toast" class="hidden fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-full shadow-lg text-xs sm:text-sm flex items-center gap-2">
+        <i class="fa-solid fa-wifi"></i> ⚠️ 연결이 잠시 끊어졌습니다. 인터넷 연결을 확인해주세요.
+    </div>
+
+    <header class="w-full max-w-2xl text-center mb-4 mt-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-slate-800/80 border border-slate-700 rounded-full text-xs text-indigo-300 font-medium mb-2">
+            <span>중학교 3학년 사회</span>
+            <span class="text-slate-500">|</span>
+            <span>인구 변화와 인구 문제</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-rose-400 tracking-tight">
+            ⚖️ 인구 문제 밸런스 게임
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1 font-medium">"당신이라면 어느 쪽을 선택할래?"</p>
+        
+        <!-- Mode Badge -->
+        <div id="mode-badge" class="hidden mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold"></div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-2xl flex-1 flex flex-col justify-center items-center relative">
+
+        <!-- VIEW 1: LANDING MODE SELECT -->
+        <section id="view-landing" class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 text-center shadow-2xl backdrop-blur-md">
+            <div class="text-4xl mb-4">🔮</div>
+            <h2 class="text-xl font-bold mb-2 text-white">수업 참여 모드를 선택하세요</h2>
+            <p class="text-xs sm:text-sm text-slate-400 mb-8">스마트폰이나 태블릿으로 친구들과 실시간 의견을 나눠보세요!</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button onclick="app.selectRole('student')" class="group relative overflow-hidden bg-gradient-to-br from-indigo-600 to-blue-700 hover:from-indigo-500 hover:to-blue-600 p-6 rounded-xl border border-indigo-400/30 text-left transition transform active:scale-95 shadow-lg">
+                    <div class="text-3xl mb-2">👨‍🎓</div>
+                    <div class="text-lg font-bold text-white group-hover:translate-x-1 transition-transform">학생 모드</div>
+                    <div class="text-xs text-indigo-200 mt-1">방 코드를 입력하고 게임에 참여합니다.</div>
+                </button>
+
+                <button onclick="app.selectRole('teacher')" class="group relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 p-6 rounded-xl border border-slate-700 text-left transition transform active:scale-95 shadow-lg">
+                    <div class="text-3xl mb-2">👩‍🏫</div>
+                    <div class="text-lg font-bold text-white group-hover:translate-x-1 transition-transform">교사 모드</div>
+                    <div class="text-xs text-slate-400 mt-1">새 수업방을 개설하고 실시간 결과를 제어합니다.</div>
+                </button>
+            </div>
+
+            <!-- Firebase Config Banner Info -->
+            <div id="demo-mode-banner" class="mt-8 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs text-left flex items-start gap-2">
+                <i class="fa-solid fa-triangle-exclamation mt-0.5 text-sm"></i>
+                <div>
+                    <span class="font-bold">현재 데모/로컬 모드 동작 중:</span> 기본 Firebase 설정값이 적용되어 동일 브라우저/기기 탭 간 실시간 테스트가 가능합니다. 타 기기 접속 수업을 진행하려면 코드 상단의 <code class="bg-amber-950 px-1 rounded font-mono">firebaseConfig</code>를 설정하세요.
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: STUDENT JOIN FORM -->
+        <section id="view-student-join" class="hidden w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 text-center shadow-2xl">
+            <div class="text-3xl mb-3">👨‍🎓</div>
+            <h2 class="text-xl font-bold text-white mb-1">수업방 입장하기</h2>
+            <p class="text-xs text-slate-400 mb-6">선생님이 화면에 보여주는 방 코드를 입력해 주세요.</p>
+
+            <form onsubmit="app.joinRoom(event)" class="space-y-4 max-w-xs mx-auto">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 text-left">수업방 코드 (4자리)</label>
+                    <input type="text" id="input-room-code" uppercase maxlength="4" placeholder="예: 7A3K" required
+                           class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-center text-xl font-mono tracking-widest text-sky-400 uppercase font-bold focus:outline-none focus:border-sky-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 text-left">닉네임</label>
+                    <input type="text" id="input-nickname" maxlength="10" placeholder="예: 인구탐정" required
+                           class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-center text-base text-white focus:outline-none focus:border-sky-500 transition">
+                </div>
+
+                <div id="join-error-msg" class="hidden text-xs text-rose-400 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20 font-medium"></div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="app.resetRole()" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold text-sm transition">
+                        이전
+                    </button>
+                    <button type="submit" class="w-2/3 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white rounded-xl font-bold text-sm shadow-lg transition active:scale-95">
+                        🚀 입장하기
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- VIEW 3: TEACHER CREATE -->
+        <section id="view-teacher-create" class="hidden w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 text-center shadow-2xl">
+            <div class="text-3xl mb-3">👩‍🏫</div>
+            <h2 class="text-xl font-bold text-white mb-2">새 수업방 개설</h2>
+            <p class="text-xs text-slate-400 mb-6">버튼을 누르면 학생들이 접속할 수 있는 실시간 방 코드 4자리가 생성됩니다.</p>
+
+            <div class="flex justify-center gap-3">
+                <button onclick="app.resetRole()" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold text-sm transition">
+                    이전
+                </button>
+                <button onclick="app.createRoom()" class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-xl font-bold text-sm shadow-lg transition active:scale-95">
+                    ✨ 새 수업방 만들기
+                </button>
+            </div>
+        </section>
+
+        <!-- VIEW 4: STUDENT GAME INTERFACE -->
+        <section id="view-student-game" class="hidden w-full space-y-4">
+            <!-- Progress Header -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex justify-between items-center text-xs">
+                <div class="flex items-center gap-2">
+                    <span id="st-q-round" class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-md font-bold">Q1</span>
+                    <span id="st-q-counter" class="text-slate-400 font-mono">1 / 10</span>
+                </div>
+                <div class="w-28 sm:w-40 bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                    <div id="st-progress-bar" class="bg-indigo-500 h-full bar-transition" style="width: 10%;"></div>
+                </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
+                <div class="text-center mb-5">
+                    <span id="st-category-tag" class="text-xs font-semibold text-sky-400 tracking-wider uppercase bg-sky-500/10 border border-sky-500/20 px-2.5 py-1 rounded-full">
+                        출산 지원
+                    </span>
+                    <h2 id="st-question-title" class="text-lg sm:text-xl font-bold text-white mt-3 leading-snug">
+                        👶 아이를 낳는다면 어떤 지원이 더 필요할까?
+                    </h2>
+                </div>
+
+                <!-- Option Buttons Dual Layout -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-2">
+                    <!-- Option A -->
+                    <button id="btn-opt-a" onclick="app.submitVote('A')" class="group relative bg-slate-950 hover:bg-slate-800 border-2 border-sky-500/40 hover:border-sky-400 rounded-2xl p-5 text-left transition transform active:scale-98 flex flex-col justify-between min-h-[140px]">
+                        <div class="flex justify-between items-center w-full">
+                            <span class="text-xl font-black text-sky-400 bg-sky-950/80 px-3 py-1 rounded-lg border border-sky-500/30">A</span>
+                            <span id="st-icon-a" class="text-2xl">💰</span>
+                        </div>
+                        <div id="st-text-a" class="text-sm font-semibold text-slate-100 mt-3 leading-relaxed">
+                            현금 1억 원 지원
+                        </div>
+                    </button>
+
+                    <!-- Option B -->
+                    <button id="btn-opt-b" onclick="app.submitVote('B')" class="group relative bg-slate-950 hover:bg-slate-800 border-2 border-rose-500/40 hover:border-rose-400 rounded-2xl p-5 text-left transition transform active:scale-98 flex flex-col justify-between min-h-[140px]">
+                        <div class="flex justify-between items-center w-full">
+                            <span class="text-xl font-black text-rose-400 bg-rose-950/80 px-3 py-1 rounded-lg border border-rose-500/30">B</span>
+                            <span id="st-icon-b" class="text-2xl">🏫</span>
+                        </div>
+                        <div id="st-text-b" class="text-sm font-semibold text-slate-100 mt-3 leading-relaxed">
+                            교육·보육을 국가가 대부분 지원
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Special Question Note / Hint -->
+                <div id="st-question-hint" class="hidden mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-200 leading-relaxed"></div>
+
+                <!-- Locked / Voted Result Container -->
+                <div id="st-result-box" class="hidden mt-6 pt-5 border-t border-slate-800/80 space-y-3">
+                    <div id="st-reaction-text" class="text-center font-bold text-sm text-indigo-300">
+                        🗳️ 우리 반의 선택은?
+                    </div>
+
+                    <!-- Progress Bars for Results -->
+                    <div class="space-y-2 text-xs">
+                        <!-- Option A Bar -->
+                        <div>
+                            <div class="flex justify-between text-slate-300 font-semibold mb-1">
+                                <span>A. <span id="res-label-a">A 옵션</span></span>
+                                <span id="res-stat-a" class="font-mono text-sky-400 font-bold">0명 (0%)</span>
+                            </div>
+                            <div class="w-full bg-slate-950 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                                <div id="res-bar-a" class="bg-sky-400 h-full rounded-full bar-transition" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Option B Bar -->
+                        <div>
+                            <div class="flex justify-between text-slate-300 font-semibold mb-1">
+                                <span>B. <span id="res-label-b">B 옵션</span></span>
+                                <span id="res-stat-b" class="font-mono text-rose-400 font-bold">0명 (0%)</span>
+                            </div>
+                            <div class="w-full bg-slate-950 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                                <div id="res-bar-b" class="bg-rose-500 h-full rounded-full bar-transition" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center pt-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-800 text-slate-400 rounded-full text-xs font-medium pulse-slow">
+                            <i class="fa-solid fa-hourglass-half text-amber-400"></i> 선생님이 다음 문항으로 넘길 때까지 잠시 대기해주세요.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 5: TEACHER DASHBOARD -->
+        <section id="view-teacher-dash" class="hidden w-full space-y-4">
+            <!-- Room Info Bar -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+                <div>
+                    <div class="text-xs text-slate-400 font-semibold uppercase">수업방 코드</div>
+                    <div id="tch-room-code" class="text-3xl font-black font-mono text-sky-400 tracking-widest">7A3K</div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-xs text-slate-400 font-semibold">현재 접속 학생</div>
+                        <div class="text-xl font-bold text-indigo-300 font-mono"><i class="fa-solid fa-users text-sm"></i> <span id="tch-student-count">0</span>명</div>
+                    </div>
+                    <div class="text-right border-l border-slate-800 pl-4">
+                        <div class="text-xs text-slate-400 font-semibold">응답 인원</div>
+                        <div class="text-xl font-bold text-emerald-400 font-mono"><span id="tch-voted-count">0</span>명</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controller Bar -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <!-- Timer Selection -->
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400 font-semibold">⏱️ 타이머:</span>
+                    <button onclick="app.startTimer(10)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-mono font-bold">10초</button>
+                    <button onclick="app.startTimer(20)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-mono font-bold">20초</button>
+                    <button onclick="app.startTimer(30)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-mono font-bold">30초</button>
+                    <span id="tch-timer-display" class="font-mono text-amber-400 font-extrabold text-sm min-w-[3rem] text-center">--</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="app.toggleLock()" id="btn-toggle-lock" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-lg font-bold transition">
+                        🔒 응답 마감
+                    </button>
+                    <button onclick="app.nextQuestion()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow transition">
+                        ▶ 다음 문항
+                    </button>
+                    <button onclick="app.confirmReset()" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg font-semibold transition" title="수업 초기화">
+                        🔄
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question & Live Visualizer Card -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+                <!-- Question Title -->
+                <div>
+                    <div class="flex justify-between items-center text-xs text-slate-400 font-semibold mb-1">
+                        <span id="tch-q-num" class="text-indigo-400 font-mono">QUESTION 01 / 10</span>
+                        <span id="tch-lock-status" class="text-emerald-400">● 응답 수집 중</span>
+                    </div>
+                    <h2 id="tch-q-title" class="text-xl sm:text-2xl font-black text-white">
+                        👶 아이를 낳는다면 어떤 지원이 더 필요할까?
+                    </h2>
+                </div>
+
+                <!-- Big Visualizer Bars -->
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- Option A Live Box -->
+                    <div class="bg-slate-950 border border-sky-500/30 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-bold text-sky-400 flex items-center gap-2">
+                                <span class="bg-sky-950 border border-sky-500/40 px-2 py-0.5 rounded text-xs">A</span>
+                                <span id="tch-opt-a-text">현금 1억 원 지원</span>
+                            </span>
+                            <span id="tch-opt-a-num" class="text-lg font-extrabold font-mono text-sky-400">0명 / 0%</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-6 rounded-lg overflow-hidden border border-slate-800 p-0.5">
+                            <div id="tch-bar-a" class="bg-gradient-to-r from-sky-500 to-blue-500 h-full rounded-md bar-transition" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Option B Live Box -->
+                    <div class="bg-slate-950 border border-rose-500/30 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-bold text-rose-400 flex items-center gap-2">
+                                <span class="bg-rose-950 border border-rose-500/40 px-2 py-0.5 rounded text-xs">B</span>
+                                <span id="tch-opt-b-text">교육·보육을 국가가 대부분 지원</span>
+                            </span>
+                            <span id="tch-opt-b-num" class="text-lg font-extrabold font-mono text-rose-400">0명 / 0%</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-6 rounded-lg overflow-hidden border border-slate-800 p-0.5">
+                            <div id="tch-bar-b" class="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-md bar-transition" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teacher Connection Tip Box -->
+                <div class="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4 text-xs text-indigo-200">
+                    <div class="font-bold text-indigo-300 text-sm mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chalkboard-user"></i> 💡 교사용 수업 연결 포인트
+                    </div>
+                    <p id="tch-link-point" class="leading-relaxed text-slate-300">
+                        "저출산 문제를 해결하기 위해 실제로 여러 가지 출산 장려 정책이 사용됩니다." PPT의 양육 비용 지원, 보육 시설 확충, 육아 휴직 활성화와 연결하세요.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 6: STUDENT RESULT / GAME COMPLETE -->
+        <section id="view-student-result" class="hidden w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 text-center shadow-2xl space-y-6">
+            <div>
+                <div class="text-5xl mb-2 animate-bounce">🎉</div>
+                <h2 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-sky-300 to-indigo-300">
+                    GAME COMPLETE!
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">10개 밸런스 선택을 모두 완료하셨습니다.</p>
+            </div>
+
+            <!-- Personality Archetype Card -->
+            <div class="bg-slate-950 border border-indigo-500/40 rounded-2xl p-5 text-left relative overflow-hidden shadow-lg">
+                <div class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1">나의 인구 정책 가치관 성향</div>
+                <h3 id="arch-title" class="text-xl font-bold text-white mb-2">👶 미래 세대 투자형</h3>
+                <p id="arch-desc" class="text-xs text-slate-300 leading-relaxed">
+                    출산과 육아 지원, 아동 보육 환경 개선 등 미래 세대의 삶의 질을 직접 낮춰주는 적극적 정책을 선호합니다.
+                </p>
+                <div class="mt-3 text-[10px] text-slate-500">※ 이 결과는 단순 수업 흥미용 성향 분석이며, 실제 정답/오답이 아닙니다.</div>
+            </div>
+
+            <!-- Transition to Social Studies Context -->
+            <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 text-left space-y-4">
+                <div class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <span class="text-amber-400">🤔</span> 그런데... 우리가 선택한 문제들이 실제 사회에서는 어떻게 나타날까요?
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="app.showTopicModal('lowbirth')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 p-3 rounded-xl text-left transition">
+                        <div class="font-bold text-sky-400 mb-1">👶 저출산</div>
+                        <div class="text-[11px] text-slate-400">합계출산율 감소와 육아 부담</div>
+                    </button>
+
+                    <button onclick="app.showTopicModal('aging')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 p-3 rounded-xl text-left transition">
+                        <div class="font-bold text-amber-400 mb-1">👴 고령화</div>
+                        <div class="text-[11px] text-slate-400">노동력 부족과 연금 재정 부담</div>
+                    </button>
+
+                    <button onclick="app.showTopicModal('overpop')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 p-3 rounded-xl text-left transition">
+                        <div class="font-bold text-emerald-400 mb-1">📈 인구 급증</div>
+                        <div class="text-[11px] text-slate-400">개발도상국의 식량·도시 부족</div>
+                    </button>
+
+                    <button onclick="app.showTopicModal('sexratio')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 p-3 rounded-xl text-left transition">
+                        <div class="font-bold text-rose-400 mb-1">⚖️ 성비 불균형</div>
+                        <div class="text-[11px] text-slate-400">사회의 가치관과 양성 평등</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <div class="p-4 bg-indigo-600/20 border border-indigo-500/40 rounded-xl text-indigo-200 text-sm font-bold">
+                    📚 이제 교재 및 선생님 PPT 수업으로 넘어가 봅시다!
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal for Topic Details -->
+    <div id="topic-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
+            <div class="flex justify-between items-center">
+                <h3 id="modal-topic-title" class="text-lg font-bold text-white">주제 설명</h3>
+                <button onclick="app.closeTopicModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p id="modal-topic-body" class="text-xs text-slate-300 leading-relaxed">내용 설명이 들어갑니다.</p>
+            <button onclick="app.closeTopicModal()" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">확인</button>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+            <div class="text-3xl text-amber-400">⚠️</div>
+            <h3 class="text-base font-bold text-white">수업 데이터를 초기화하시겠습니까?</h3>
+            <p class="text-xs text-slate-400">현재 수집된 모든 실시간 응답 기록이 삭제됩니다.</p>
+            <div class="flex gap-2">
+                <button onclick="app.closeConfirmModal(false)" class="w-1/2 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold">취소</button>
+                <button onclick="app.closeConfirmModal(true)" class="w-1/2 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold">네, 초기화합니다</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="w-full text-center text-[11px] text-slate-600 py-3">
+        중학교 3학년 사회 실시간 참여형 인구 문제 수업 도구
+    </footer>
+
+    <!-- Firebase JS SDK (v11.6.1) imports via ES Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, update, onValue, get, child, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // ==========================================
+        // 20. FIREBASE CONFIGURATION (선생님 수정 영역)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.firebasestorage.app",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // ==========================================
+        // 10 BALANCE GAME QUESTIONS DEFINITION
+        // ==========================================
+        const QUESTIONS = [
+            {
+                id: 1,
+                category: "👶 출산 지원",
+                question: "아이를 낳는다면 어떤 지원이 더 필요할까?",
+                optA: { icon: "💰", text: "아이를 낳으면 현금 1억 원 지급" },
+                optB: { icon: "🏫", text: "현금 지원은 적지만 교육·보육을 국가가 대부분 지원" },
+                teacherTip: "저출산 문제를 해결하기 위해 실제로 여러 출산 장려 정책이 시행됩니다. 양육 비용 직접 지원 vs 보육 인프라 구축의 차이를 토의해보세요."
+            },
+            {
+                id: 2,
+                category: "👶 vs 💰 세제 지원",
+                question: "미래 사회 지원 방식 중 선택한다면?",
+                optA: { icon: "📜", text: "아이를 낳으면 세금 10년 면제" },
+                optB: { icon: "👵", text: "아이를 낳지 않아도 노후에 받을 연금이 더 많아짐" },
+                teacherTip: "국가가 출산 문제와 저출산 정책에 예산을 대거 투입해야 하는 이유와 국가 정책의 우선순위를 고려해보게 합니다."
+            },
+            {
+                id: 3,
+                category: "🏫 일과 육아",
+                question: "직장 생활과 가정 양립 정책 선택은?",
+                optA: { icon: "👨‍👩‍👧", text: "주 4일 근무 대신 월급 10% 감소" },
+                optB: { icon: "💼", text: "주 5일 근무 유지, 대신 월급 그대로 지급" },
+                teacherTip: "여성의 사회 진출 및 양육 환경 조성이 저출산 문제 극복에 미치는 영향을 연결하여 설명합니다."
+            },
+            {
+                id: 4,
+                category: "👴 정년 연장",
+                question: "고령화 사회, 정년 연장 나이는?",
+                optA: { icon: "👴", text: "정년 65세 유지" },
+                optB: { icon: "👵", text: "정년 70세로 연장" },
+                hint: "💡 정년 연장은 고령층의 경제 활동을 늘리지만, 청년층 신규 일자리 창출과의 관계도 고려해야 합니다.",
+                teacherTip: "고령화 심화에 따른 생산가능인구 감소 및 노동력 부족 대안으로서 정년 연장의 장단점을 짚어줍니다."
+            },
+            {
+                id: 5,
+                category: "🤖 AI vs 👷 사람",
+                question: "인구 감소로 인한 노동력 부족 해결책은?",
+                optA: { icon: "🤖", text: "노동력 부족을 AI·로봇으로 해결한다" },
+                optB: { icon: "🌏", text: "외국인 노동자·이민자를 적극적으로 받아들인다" },
+                teacherTip: "기술적 대처(자동화)와 사회적 대처(이민자 수용) 간의 시각차를 확인하고 다문화 사회로의 이행 요인을 설명합니다."
+            },
+            {
+                id: 6,
+                category: "🏙️ 도시 집중",
+                question: "국토 균형 발전과 인구 배치 정책은?",
+                optA: { icon: "🏙️", text: "서울·대도시에 인프라와 배움을 계속 투자한다" },
+                optB: { icon: "🌳", text: "지방에 기업과 일자리를 적극적으로 이전한다" },
+                teacherTip: "대도시 인구 집중 현상으로 인한 집값 상승, 양육 부담 및 개발도상국의 도시화 문제와 연결시킵니다."
+            },
+            {
+                id: 7,
+                category: "🍚 인구 급증 (가상 국가)",
+                question: "인구가 급증해 식량과 일자리가 부족한 가상 국가 정책은?",
+                optA: { icon: "🌾", text: "농업 생산력과 신기술 개발을 크게 높인다" },
+                optB: { icon: "👨‍👩‍👧", text: "가족 계획을 적극적으로 실시하여 출생률을 조절한다" },
+                teacherTip: "개발도상국에서 주로 발생하는 높은 출생률과 인구 급증에 따른 식량 및 자원 부족 문제를 지도합니다."
+            },
+            {
+                id: 8,
+                category: "⚖️ 성비 불균형 (가상 국가)",
+                question: "남녀 인구 비율 격차가 매우 심한 가상 국가의 선택은?",
+                optA: { icon: "⚖️", text: "성별 관계없이 동등한 교육·취업 기회를 보장한다" },
+                optB: { icon: "📢", text: "출생 단계에서 남녀 비율을 사회적으로 직접 조절한다" },
+                hint: "💡 잠깐! 인구 문제를 해결할 때는 단순한 숫자 조절보다 사회의 양성 평등 가치관과 제도 안정이 더 중요합니다.",
+                teacherTip: "남아 선호 사상 등으로 인한 성비 불균형 문제를 가치관 변화와 양성 평등 문화 정착 시각에서 설명합니다."
+            },
+            {
+                id: 9,
+                category: "👵 고령화 복지",
+                question: "노인 인구가 지속적으로 늘어나는 사회의 복지 방향은?",
+                optA: { icon: "💳", text: "노인 연금 지원을 크게 늘린다" },
+                optB: { icon: "💼", text: "노인이 계속 일할 수 있도록 일자리를 확대한다" },
+                teacherTip: "고령화에 대응하기 위한 연금 제도 정비, 노인 경제 활동 지원, 복지 재정 부담 등을 주제로 다룹니다."
+            },
+            {
+                id: 10,
+                category: "🌏 미래의 대한민국",
+                question: "20년 뒤 대한민국 정책 결정자라면 우선할 전략은?",
+                optA: { icon: "👶", text: "출산·육아 지원에 국가 예산을 집중 투입한다" },
+                optB: { icon: "🌏", text: "이민, 자동화, 정년 연장 등 다각도 방법을 동시 활용한다" },
+                teacherTip: "단일 정책 중심 접근과 종합적인 인구 구조 변화 대응 전략의 필요성을 총괄 정리합니다."
+            }
+        ];
+
+        // Global Application State Class
+        class PopulationApp {
+            constructor() {
+                this.role = null; // 'teacher' | 'student'
+                this.roomCode = null;
+                this.studentId = this.getOrCreateStudentId();
+                this.nickname = '';
+                this.currentQuestionIdx = 0; // 0..9
+                this.isLocked = false;
+                this.myAnswers = {}; // { q1: 'A', q2: 'B' }
+                this.isFirebaseReady = false;
+                this.timerInterval = null;
+
+                // Local Broadcast Channel fallback for offline demo testing
+                this.broadcastChannel = new BroadcastChannel('population_game_channel');
+
+                this.initFirebase();
+                this.bindEvents();
+            }
+
+            getOrCreateStudentId() {
+                let id = sessionStorage.getItem('pop_student_id');
+                if (!id) {
+                    id = 'std_' + Math.random().toString(36).substring(2, 9);
+                    sessionStorage.setItem('pop_student_id', id);
+                }
+                return id;
+            }
+
+            initFirebase() {
+                // Check if firebaseConfig is valid
+                if (firebaseConfig && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                    try {
+                        this.firebaseApp = initializeApp(firebaseConfig);
+                        this.auth = getAuth(this.firebaseApp);
+                        this.db = getDatabase(this.firebaseApp);
+
+                        signInAnonymously(this.auth).then(() => {
+                            this.isFirebaseReady = true;
+                            document.getElementById('demo-mode-banner').classList.add('hidden');
+                        }).catch(err => {
+                            console.warn("Firebase Auth Error, running demo mode:", err);
+                        });
+                    } catch (e) {
+                        console.warn("Firebase init error, fallback to demo mode:", e);
+                    }
+                } else {
+                    console.log("Firebase config not supplied. Running in Demo / BroadcastChannel Mode.");
+                }
+
+                // Listen to fallback broadcast
+                this.broadcastChannel.onmessage = (event) => {
+                    if (!this.isFirebaseReady) {
+                        this.handleBroadcastMessage(event.data);
+                    }
+                };
+
+                // Online / Offline monitor
+                window.addEventListener('online', () => this.toggleNetworkToast(false));
+                window.addEventListener('offline', () => this.toggleNetworkToast(true));
+            }
+
+            toggleNetworkToast(show) {
+                const toast = document.getElementById('network-toast');
+                if (show) toast.classList.remove('hidden');
+                else toast.classList.add('hidden');
+            }
+
+            bindEvents() {
+                // Prevent duplicate form submit page reloads
+            }
+
+            selectRole(role) {
+                this.role = role;
+                document.getElementById('view-landing').classList.add('hidden');
+
+                const badge = document.getElementById('mode-badge');
+                badge.classList.remove('hidden');
+
+                if (role === 'teacher') {
+                    badge.className = "mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+                    badge.innerHTML = `<i class="fa-solid fa-chalkboard-user"></i> 교사 모드`;
+                    document.getElementById('view-teacher-create').classList.remove('hidden');
+                } else {
+                    badge.className = "mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30";
+                    badge.innerHTML = `<i class="fa-solid fa-user-graduate"></i> 학생 모드`;
+                    document.getElementById('view-student-join').classList.remove('hidden');
+                }
+            }
+
+            resetRole() {
+                this.role = null;
+                document.getElementById('mode-badge').classList.add('hidden');
+                document.getElementById('view-landing').classList.remove('hidden');
+                document.getElementById('view-teacher-create').classList.add('hidden');
+                document.getElementById('view-student-join').classList.add('hidden');
+                document.getElementById('view-student-game').classList.add('hidden');
+                document.getElementById('view-teacher-dash').classList.add('hidden');
+                document.getElementById('view-student-result').classList.add('hidden');
+            }
+
+            createRoom() {
+                const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+                let code = '';
+                for (let i = 0; i < 4; i++) {
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                this.roomCode = code;
+
+                // Initial Room Data
+                const initialRoomData = {
+                    code: code,
+                    currentQuestion: 0,
+                    isLocked: false,
+                    students: {},
+                    answers: {}
+                };
+
+                if (this.isFirebaseReady) {
+                    const roomRef = ref(this.db, `rooms/${this.roomCode}`);
+                    set(roomRef, initialRoomData).then(() => {
+                        this.startTeacherDashboard();
+                    });
+                } else {
+                    // Local Storage & Broadcast Demo
+                    localStorage.setItem(`demo_room_${this.roomCode}`, JSON.stringify(initialRoomData));
+                    this.startTeacherDashboard();
+                }
+            }
+
+            joinRoom(e) {
+                e.preventDefault();
+                const codeInput = document.getElementById('input-room-code').value.trim().toUpperCase();
+                const nickInput = document.getElementById('input-nickname').value.trim();
+                const errBox = document.getElementById('join-error-msg');
+
+                errBox.classList.add('hidden');
+
+                if (!codeInput || codeInput.length < 4) {
+                    errBox.textContent = "방 코드 4자리를 정확히 입력해주세요.";
+                    errBox.classList.remove('hidden');
+                    return;
+                }
+
+                if (!nickInput) {
+                    errBox.textContent = "닉네임을 입력해주세요.";
+                    errBox.classList.remove('hidden');
+                    return;
+                }
+
+                this.roomCode = codeInput;
+                this.nickname = nickInput;
+
+                if (this.isFirebaseReady) {
+                    const roomRef = ref(this.db, `rooms/${this.roomCode}`);
+                    get(roomRef).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            // Register student in room
+                            const studentRef = ref(this.db, `rooms/${this.roomCode}/students/${this.studentId}`);
+                            set(studentRef, { nickname: this.nickname, joinedAt: Date.now() });
+                            this.startStudentGame();
+                        } else {
+                            errBox.textContent = "❌ 존재하지 않는 수업방입니다. 코드를 확인해주세요.";
+                            errBox.classList.remove('hidden');
+                        }
+                    }).catch(err => {
+                        errBox.textContent = "연결 중 오류가 발생했습니다.";
+                        errBox.classList.remove('hidden');
+                    });
+                } else {
+                    // Demo Mode Check
+                    const localData = localStorage.getItem(`demo_room_${this.roomCode}`);
+                    if (localData) {
+                        const roomObj = JSON.parse(localData);
+                        roomObj.students[this.studentId] = { nickname: this.nickname };
+                        localStorage.setItem(`demo_room_${this.roomCode}`, JSON.stringify(roomObj));
+                        this.broadcastChange({ type: 'STUDENT_JOIN', studentId: this.studentId, nickname: this.nickname });
+                        this.startStudentGame();
+                    } else {
+                        errBox.textContent = "❌ 존재하지 않는 수업방입니다. (데모 모드는 생성된 코드 필요)";
+                        errBox.classList.remove('hidden');
+                    }
+                }
+            }
+
+            startTeacherDashboard() {
+                document.getElementById('view-teacher-create').classList.add('hidden');
+                document.getElementById('view-teacher-dash').classList.remove('hidden');
+                document.getElementById('tch-room-code').textContent = this.roomCode;
+
+                if (this.isFirebaseReady) {
+                    const roomRef = ref(this.db, `rooms/${this.roomCode}`);
+                    onValue(roomRef, (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            this.updateTeacherUI(data);
+                        }
+                    });
+                } else {
+                    this.pollDemoRoomData();
+                }
+            }
+
+            updateTeacherUI(data) {
+                this.currentQuestionIdx = data.currentQuestion || 0;
+                this.isLocked = data.isLocked || false;
+
+                const q = QUESTIONS[this.currentQuestionIdx];
+                document.getElementById('tch-q-num').textContent = `QUESTION ${q.id.toString().padStart(2, '0')} / ${QUESTIONS.length}`;
+                document.getElementById('tch-q-title').textContent = `${q.category} : ${q.question}`;
+                document.getElementById('tch-opt-a-text').textContent = q.optA.text;
+                document.getElementById('tch-opt-b-text').textContent = q.optB.text;
+                document.getElementById('tch-link-point').textContent = q.teacherTip;
+
+                // Lock status display
+                const lockStatus = document.getElementById('tch-lock-status');
+                if (this.isLocked) {
+                    lockStatus.textContent = "🔒 응답 마감됨";
+                    lockStatus.className = "text-amber-400 font-bold";
+                    document.getElementById('btn-toggle-lock').textContent = "🔓 응답 재개";
+                } else {
+                    lockStatus.textContent = "● 응답 수집 중";
+                    lockStatus.className = "text-emerald-400 font-bold";
+                    document.getElementById('btn-toggle-lock').textContent = "🔒 응답 마감";
+                }
+
+                // Student count
+                const students = data.students || {};
+                const studentCount = Object.keys(students).length;
+                document.getElementById('tch-student-count').textContent = studentCount;
+
+                // Calculate votes for current question
+                const qKey = `q${q.id}`;
+                const answersForQ = (data.answers && data.answers[qKey]) ? data.answers[qKey] : {};
+                
+                let countA = 0;
+                let countB = 0;
+                const votedStudentIds = Object.keys(answersForQ);
+                votedStudentIds.forEach(stId => {
+                    if (answersForQ[stId] === 'A') countA++;
+                    if (answersForQ[stId] === 'B') countB++;
+                });
+
+                const totalVotes = countA + countB;
+                document.getElementById('tch-voted-count').textContent = totalVotes;
+
+                const pctA = totalVotes > 0 ? Math.round((countA / totalVotes) * 100) : 0;
+                const pctB = totalVotes > 0 ? Math.round((countB / totalVotes) * 100) : 0;
+
+                document.getElementById('tch-opt-a-num').textContent = `${countA}명 / ${pctA}%`;
+                document.getElementById('tch-opt-b-num').textContent = `${countB}명 / ${pctB}%`;
+
+                document.getElementById('tch-bar-a').style.width = `${pctA}%`;
+                document.getElementById('tch-bar-b').style.width = `${pctB}%`;
+            }
+
+            startStudentGame() {
+                document.getElementById('view-student-join').classList.add('hidden');
+                document.getElementById('view-student-game').classList.remove('hidden');
+
+                if (this.isFirebaseReady) {
+                    const roomRef = ref(this.db, `rooms/${this.roomCode}`);
+                    onValue(roomRef, (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            this.updateStudentUI(data);
+                        }
+                    });
+                } else {
+                    this.pollDemoRoomData();
+                }
+            }
+
+            updateStudentUI(data) {
+                const newQIdx = data.currentQuestion || 0;
+                this.isLocked = data.isLocked || false;
+
+                // Question changed?
+                if (newQIdx !== this.currentQuestionIdx) {
+                    this.currentQuestionIdx = newQIdx;
+                }
+
+                // Check if overall complete
+                if (this.currentQuestionIdx >= QUESTIONS.length) {
+                    this.renderStudentResultScreen();
+                    return;
+                }
+
+                const q = QUESTIONS[this.currentQuestionIdx];
+                document.getElementById('st-q-round').textContent = `Q${q.id}`;
+                document.getElementById('st-q-counter').textContent = `${q.id} / ${QUESTIONS.length}`;
+                document.getElementById('st-progress-bar').style.width = `${(q.id / QUESTIONS.length) * 100}%`;
+
+                document.getElementById('st-category-tag').textContent = q.category;
+                document.getElementById('st-question-title').textContent = q.question;
+                
+                document.getElementById('st-icon-a').textContent = q.optA.icon;
+                document.getElementById('st-text-a').textContent = q.optA.text;
+                document.getElementById('st-icon-b').textContent = q.optB.icon;
+                document.getElementById('st-text-b').textContent = q.optB.text;
+
+                // Hint if present
+                const hintBox = document.getElementById('st-question-hint');
+                if (q.hint) {
+                    hintBox.textContent = q.hint;
+                    hintBox.classList.remove('hidden');
+                } else {
+                    hintBox.classList.add('hidden');
+                }
+
+                // Check if student already voted for this question
+                const qKey = `q${q.id}`;
+                const answersForQ = (data.answers && data.answers[qKey]) ? data.answers[qKey] : {};
+                const myChoice = answersForQ[this.studentId];
+
+                const btnA = document.getElementById('btn-opt-a');
+                const btnB = document.getElementById('btn-opt-b');
+                const resultBox = document.getElementById('st-result-box');
+
+                if (myChoice || this.isLocked) {
+                    // Lock button interactions
+                    btnA.disabled = true;
+                    btnB.disabled = true;
+                    btnA.classList.add('opacity-50', 'cursor-not-allowed');
+                    btnB.classList.add('opacity-50', 'cursor-not-allowed');
+
+                    if (myChoice === 'A') {
+                        btnA.classList.add('neon-glow-a', 'border-sky-400', 'bg-sky-950/40');
+                        btnB.classList.remove('neon-glow-b');
+                    } else if (myChoice === 'B') {
+                        btnB.classList.add('neon-glow-b', 'border-rose-400', 'bg-rose-950/40');
+                        btnA.classList.remove('neon-glow-a');
+                    }
+
+                    // Show class live summary
+                    resultBox.classList.remove('hidden');
+                    this.renderStudentResultMetrics(q, answersForQ);
+                } else {
+                    // Reset buttons for active voting
+                    btnA.disabled = false;
+                    btnB.disabled = false;
+                    btnA.classList.remove('opacity-50', 'cursor-not-allowed', 'neon-glow-a', 'border-sky-400', 'bg-sky-950/40');
+                    btnB.classList.remove('opacity-50', 'cursor-not-allowed', 'neon-glow-b', 'border-rose-400', 'bg-rose-950/40');
+                    resultBox.classList.add('hidden');
+                }
+            }
+
+            submitVote(option) {
+                const q = QUESTIONS[this.currentQuestionIdx];
+                const qKey = `q${q.id}`;
+                this.myAnswers[qKey] = option;
+
+                if (this.isFirebaseReady) {
+                    const ansRef = ref(this.db, `rooms/${this.roomCode}/answers/${qKey}/${this.studentId}`);
+                    set(ansRef, option);
+                } else {
+                    // Demo Local Storage update
+                    const localData = localStorage.getItem(`demo_room_${this.roomCode}`);
+                    if (localData) {
+                        const roomObj = JSON.parse(localData);
+                        if (!roomObj.answers) roomObj.answers = {};
+                        if (!roomObj.answers[qKey]) roomObj.answers[qKey] = {};
+                        roomObj.answers[qKey][this.studentId] = option;
+                        localStorage.setItem(`demo_room_${this.roomCode}`, JSON.stringify(roomObj));
+                        this.broadcastChange({ type: 'VOTE', qKey, studentId: this.studentId, option });
+                        this.updateStudentUI(roomObj);
+                    }
+                }
+            }
+
+            renderStudentResultMetrics(q, answersForQ) {
+                let countA = 0;
+                let countB = 0;
+                const votedStudentIds = Object.keys(answersForQ);
+                votedStudentIds.forEach(stId => {
+                    if (answersForQ[stId] === 'A') countA++;
+                    if (answersForQ[stId] === 'B') countB++;
+                });
+
+                const total = countA + countB;
+                const pctA = total > 0 ? Math.round((countA / total) * 100) : 0;
+                const pctB = total > 0 ? Math.round((countB / total) * 100) : 0;
+
+                document.getElementById('res-label-a').textContent = q.optA.text;
+                document.getElementById('res-label-b').textContent = q.optB.text;
+
+                document.getElementById('res-stat-a').textContent = `${countA}명 (${pctA}%)`;
+                document.getElementById('res-stat-b').textContent = `${countB}명 (${pctB}%)`;
+
+                document.getElementById('res-bar-a').style.width = `${pctA}%`;
+                document.getElementById('res-bar-b').style.width = `${pctB}%`;
+
+                // Reaction Text logic
+                const reactionEl = document.getElementById('st-reaction-text');
+                if (total === 0) {
+                    reactionEl.textContent = "🗳️ 우리 반 친구들의 선택을 기다리는 중...";
+                } else if (Math.abs(pctA - pctB) <= 10) {
+                    reactionEl.textContent = "⚔️ 완전 팽팽한 대결! 의견이 절반으로 갈렸어요.";
+                } else if (pctA >= 65 || pctB >= 65) {
+                    reactionEl.textContent = "🔥 우리 반의 의견이 한쪽으로 몰렸어요!";
+                } else {
+                    reactionEl.textContent = "👀 생각보다 의견이 다양하게 갈렸네요!";
+                }
+            }
+
+            nextQuestion() {
+                const nextIdx = this.currentQuestionIdx + 1;
+                this.updateRoomState({ currentQuestion: nextIdx, isLocked: false });
+            }
+
+            toggleLock() {
+                this.isLocked = !this.isLocked;
+                this.updateRoomState({ isLocked: this.isLocked });
+            }
+
+            startTimer(seconds) {
+                let remaining = seconds;
+                const timerEl = document.getElementById('tch-timer-display');
+                timerEl.textContent = `${remaining}초`;
+
+                if (this.timerInterval) clearInterval(this.timerInterval);
+
+                this.timerInterval = setInterval(() => {
+                    remaining--;
+                    if (remaining > 0) {
+                        timerEl.textContent = `${remaining}초`;
+                    } else {
+                        clearInterval(this.timerInterval);
+                        timerEl.textContent = "마감!";
+                        this.updateRoomState({ isLocked: true });
+                    }
+                }, 1000);
+            }
+
+            confirmReset() {
+                document.getElementById('confirm-modal').classList.remove('hidden');
+            }
+
+            closeConfirmModal(yes) {
+                document.getElementById('confirm-modal').classList.add('hidden');
+                if (yes) {
+                    this.updateRoomState({
+                        currentQuestion: 0,
+                        isLocked: false,
+                        answers: {}
+                    });
+                }
+            }
+
+            updateRoomState(updates) {
+                if (this.isFirebaseReady) {
+                    const roomRef = ref(this.db, `rooms/${this.roomCode}`);
+                    update(roomRef, updates);
+                } else {
+                    const localData = localStorage.getItem(`demo_room_${this.roomCode}`);
+                    if (localData) {
+                        const roomObj = JSON.parse(localData);
+                        Object.assign(roomObj, updates);
+                        localStorage.setItem(`demo_room_${this.roomCode}`, JSON.stringify(roomObj));
+                        this.broadcastChange({ type: 'STATE_UPDATE', updates });
+                        this.updateTeacherUI(roomObj);
+                    }
+                }
+            }
+
+            renderStudentResultScreen() {
+                document.getElementById('view-student-game').classList.add('hidden');
+                document.getElementById('view-student-result').classList.remove('hidden');
+
+                // Determine Archetype
+                let choiceA = 0;
+                let choiceB = 0;
+                Object.values(this.myAnswers).forEach(val => {
+                    if (val === 'A') choiceA++;
+                    if (val === 'B') choiceB++;
+                });
+
+                const titleEl = document.getElementById('arch-title');
+                const descEl = document.getElementById('arch-desc');
+
+                if (choiceA >= 7) {
+                    titleEl.textContent = "💰 직접 복지 & 과감한 정책형";
+                    descEl.textContent = "현금 지급, 세금 면제, 자율적 대책 등 직접적이고 직관적인 국가적 파격 지원을 적극 선호합니다.";
+                } else if (choiceB >= 7) {
+                    titleEl.textContent = "🏫 사회 인프라 & 보충 체계 중심형";
+                    descEl.textContent = "교육·보육 공공화, 정년 연장, 이민 수용 등 장기적인 사회 시스템 인프라 구축을 중요하게 생각합니다.";
+                } else if (this.myAnswers['q5'] === 'A' && this.myAnswers['q7'] === 'A') {
+                    titleEl.textContent = "🤖 기술 혁신 해결사형";
+                    descEl.textContent = "노동력 부족과 식량 문제를 AI·로봇 및 농업 기술 등 과학기술의 혁신으로 극복하고자 합니다.";
+                } else {
+                    titleEl.textContent = "⚖️ 균형 잡힌 제도 조율형";
+                    descEl.textContent = "한 가지 방식에 의존하기보다 개인의 삶과 사회 전체 복지의 균형을 다각도로 고려하여 신중하게 선택합니다.";
+                }
+            }
+
+            showTopicModal(type) {
+                const modal = document.getElementById('topic-modal');
+                const title = document.getElementById('modal-topic-title');
+                const body = document.getElementById('modal-topic-body');
+
+                if (type === 'lowbirth') {
+                    title.textContent = "👶 저출산 문제";
+                    body.textContent = "출생률이 지속적으로 낮아지면서 유소년 인구가 줄어들고 미래의 생산가능인구가 부족해집니다. 육아 부담, 주거비, 일·가정 양립의 어려움 등이 원인입니다.";
+                } else if (type === 'aging') {
+                    title.textContent = "👴 고령화 문제";
+                    body.textContent = "전체 인구 중 65세 이상 노인 비중이 급격히 늘어나는 현상입니다. 노인 복지비용 및 연금 재정 부담이 증대되고 청년층의 부양 부담이 커집니다.";
+                } else if (type === 'overpop') {
+                    title.textContent = "📈 인구 급증 문제";
+                    body.textContent = "주로 개발도상국에서 의료 기술 발전으로 사망률은 급감했으나 출생률이 높아 발생합니다. 식량 부족, 도시 빈곤, 일자리 부족 문제를 야기합니다.";
+                } else if (type === 'sexratio') {
+                    title.textContent = "⚖️ 성비 불균형 문제";
+                    body.textContent = "남아 선호 사상 등으로 특정 성별 비중이 왜곡되는 문제입니다. 성평등 가치관 정착과 여성의 권익 신장이 중요한 해결책입니다.";
+                }
+
+                modal.classList.remove('hidden');
+            }
+
+            closeTopicModal() {
+                document.getElementById('topic-modal').classList.add('hidden');
+            }
+
+            // Fallback Polling / Broadcast for offline demo testing
+            pollDemoRoomData() {
+                if (this.demoInterval) clearInterval(this.demoInterval);
+                this.demoInterval = setInterval(() => {
+                    const localData = localStorage.getItem(`demo_room_${this.roomCode}`);
+                    if (localData) {
+                        const roomObj = JSON.parse(localData);
+                        if (this.role === 'teacher') this.updateTeacherUI(roomObj);
+                        if (this.role === 'student') this.updateStudentUI(roomObj);
+                    }
+                }, 1000);
+            }
+
+            broadcastChange(msg) {
+                this.broadcastChannel.postMessage(msg);
+            }
+
+            handleBroadcastMessage(msg) {
+                const localData = localStorage.getItem(`demo_room_${this.roomCode}`);
+                if (localData) {
+                    const roomObj = JSON.parse(localData);
+                    if (this.role === 'teacher') this.updateTeacherUI(roomObj);
+                    if (this.role === 'student') this.updateStudentUI(roomObj);
+                }
+            }
+        }
+
+        // Initialize App on Window Load
+        window.addEventListener('DOMContentLoaded', () => {
+            window.app = new PopulationApp();
+        });
+    </script>
+</body>
+</html>
