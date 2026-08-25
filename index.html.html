@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🌏 인구 문제 해결사</title>
+<style>
+  :root{
+    --navy-900:#0b1220;
+    --navy-800:#121b30;
+    --navy-700:#1a2540;
+    --navy-600:#243256;
+    --card:#f7f9fc;
+    --card-2:#ffffff;
+    --ink:#0f1729;
+    --ink-soft:#5b6478;
+    --accent:#22d3ee;
+    --accent-2:#fbbf24;
+    --accent-3:#f43f5e;
+    --good:#2dd4a7;
+    --bad:#f4506a;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 20% -10%, #16213f 0%, var(--navy-900) 55%), var(--navy-900);
+    color:#eef2ff;
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",-apple-system,BlinkMacSystemFont,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    max-width:880px;
+    margin:0 auto;
+    padding:20px 16px 60px;
+  }
+  .screen{display:none;}
+  .screen.active{display:block; animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ===== 공통 ===== */
+  .top-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:12px; color:#9fb0d6; letter-spacing:.02em;
+  }
+  h1{font-size:clamp(24px,5vw,34px); margin:10px 0 4px; line-height:1.25;}
+  .subtitle{color:#a9b6da; font-size:15px; margin-bottom:22px;}
+  .card{
+    background:linear-gradient(180deg, var(--card-2), var(--card));
+    color:var(--ink);
+    border-radius:var(--radius);
+    padding:22px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:none; cursor:pointer;
+    font-family:inherit; font-weight:700; font-size:15px;
+    border-radius:14px; padding:14px 20px;
+    transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{ background:linear-gradient(135deg, var(--accent), #0ea5c7); color:#04222b; box-shadow:0 6px 18px rgba(34,211,238,.35);}
+  .btn-primary:hover{box-shadow:0 8px 22px rgba(34,211,238,.5);}
+  .btn-secondary{ background:#1e2a4a; color:#dce6ff; border:1px solid #33436f;}
+  .btn-ghost{ background:transparent; color:#9fb0d6; border:1px solid #33436f; font-weight:600; font-size:13px; padding:8px 14px;}
+  .btn:disabled{opacity:.45; cursor:not-allowed; transform:none;}
+  .btn-block{width:100%;}
+  .row{display:flex; gap:12px; flex-wrap:wrap;}
+  .center{text-align:center;}
+  .small{font-size:12px; color:#8b96b8;}
+  .spacer-24{height:24px;}
+  .spacer-12{height:12px;}
+
+  /* ===== 메인 화면 ===== */
+  .hero{
+    text-align:center;
+    padding:38px 18px 10px;
+  }
+  .hero .emoji-big{font-size:52px; display:block; margin-bottom:6px;}
+  .name-box{
+    margin:26px 0 18px;
+    background:#101a30;
+    border:1px solid #2a3a63;
+    border-radius:16px;
+    padding:16px 18px;
+  }
+  .name-box label{display:block; font-size:13px; color:#9fb0d6; margin-bottom:8px; font-weight:600;}
+  .name-box input{
+    width:100%; padding:13px 14px; border-radius:12px; border:1px solid #34456f;
+    background:#0c1526; color:#eef2ff; font-size:16px; font-family:inherit;
+  }
+  .name-box input:focus{outline:2px solid var(--accent);}
+  .name-warning{
+    display:none; color:var(--accent-3); font-size:13px; margin-top:10px; font-weight:700;
+  }
+  .name-warning.show{display:block;}
+  .game-select{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:8px;}
+  @media(max-width:560px){ .game-select{grid-template-columns:1fr;} }
+  .game-tile{
+    background:linear-gradient(160deg, #16223f, #0f1830);
+    border:1px solid #2a3a63;
+    border-radius:18px;
+    padding:22px 18px;
+    cursor:pointer;
+    text-align:left;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .game-tile:hover{transform:translateY(-3px); border-color:var(--accent);}
+  .game-tile .gi-icon{font-size:34px;}
+  .game-tile h3{margin:10px 0 6px; font-size:17px;}
+  .game-tile p{margin:0; font-size:13px; color:#9fb0d6; line-height:1.5;}
+  .footer-note{
+    text-align:center; margin-top:36px; color:#5c6890; font-size:12px; line-height:1.7;
+  }
+  .teacher-corner{
+    position:fixed; right:14px; bottom:14px; z-index:40;
+  }
+
+  /* ===== 게임 공통 상단바 ===== */
+  .hud{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; margin-bottom:16px; flex-wrap:wrap;
+  }
+  .hud-left{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .pill{
+    background:#152040; border:1px solid #2a3a63; color:#cfe0ff;
+    padding:7px 13px; border-radius:999px; font-size:13px; font-weight:700;
+  }
+  .pill.accent{background:rgba(34,211,238,.15); border-color:rgba(34,211,238,.4); color:var(--accent);}
+  .progress-track{
+    height:9px; background:#152040; border-radius:999px; overflow:hidden; border:1px solid #2a3a63;
+  }
+  .progress-fill{
+    height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius:999px; transition:width .5s ease;
+  }
+
+  /* ===== 게임1 ===== */
+  .case-tag{font-size:13px; font-weight:800; color:var(--accent); letter-spacing:.03em;}
+  .case-lead{font-size:19px; font-weight:800; margin:4px 0 16px; color:var(--ink);}
+  .pyramid-wrap{background:#fff; border-radius:14px; padding:10px 4px; border:1px solid #e4e9f5;}
+  .pyramid-legend{display:flex; justify-content:space-between; font-size:12px; font-weight:700; padding:0 14px; margin-top:6px;}
+  .legend-m{color:#3b82f6;}
+  .legend-f{color:#ec4899;}
+  .q-title{font-size:16px; font-weight:800; margin:18px 0 12px; color:var(--ink);}
+  .options{display:flex; flex-direction:column; gap:10px;}
+  .opt-btn{
+    text-align:left; padding:14px 16px; border-radius:13px; border:2px solid #e2e7f3;
+    background:#fff; color:var(--ink); font-size:15px; font-weight:600; cursor:pointer;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .opt-btn:hover:not(:disabled){border-color:var(--accent);}
+  .opt-btn:disabled{cursor:default;}
+  .opt-mark{font-weight:900; font-size:16px; min-width:20px; text-align:center;}
+  .opt-btn.correct{border-color:var(--good); background:#eafff8;}
+  .opt-btn.correct .opt-mark{color:var(--good);}
+  .opt-btn.wrong{border-color:var(--bad); background:#fff1f3;}
+  .opt-btn.wrong .opt-mark{color:var(--bad);}
+  .opt-btn.dim{opacity:.55;}
+
+  .feedback-box{
+    margin-top:16px; padding:14px 16px; border-radius:13px; font-size:14px; line-height:1.6;
+    border:1px solid; display:none;
+  }
+  .feedback-box.show{display:block; animation:pop .3s ease;}
+  .feedback-box.ok{background:#eafff8; border-color:var(--good); color:#046652;}
+  .feedback-box.no{background:#fff1f3; border-color:var(--bad); color:#8a1230;}
+  @keyframes pop{0%{transform:scale(.94); opacity:0;} 100%{transform:scale(1); opacity:1;}}
+
+  .reveal-box{
+    margin-top:18px; padding:18px; border-radius:14px; background:#101a30; border:1px solid #2a3a63;
+    text-align:center; color:#eef2ff;
+  }
+  .reveal-box .rb-title{font-size:13px; color:#9fb0d6; font-weight:700;}
+  .reveal-box .rb-name{font-size:22px; font-weight:900; margin:6px 0;}
+  .reveal-box .rb-score{font-size:13px; color:var(--accent-2); font-weight:700;}
+
+  /* ===== 게임2 ===== */
+  .stat-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:18px;}
+  @media(max-width:640px){ .stat-grid{grid-template-columns:repeat(3,1fr);} }
+  .stat-box{background:#101a30; border:1px solid #2a3a63; border-radius:12px; padding:10px 8px; text-align:center;}
+  .stat-box .si{font-size:18px;}
+  .stat-box .sv{font-size:17px; font-weight:900; margin:2px 0; color:#eef2ff;}
+  .stat-box .sl{font-size:10.5px; color:#8b96b8; font-weight:700;}
+  .stat-bar-track{height:5px; border-radius:99px; background:#22304f; margin-top:5px; overflow:hidden;}
+  .stat-bar-fill{height:100%; border-radius:99px; transition:width .6s ease;}
+
+  .year-title{font-size:15px; font-weight:800; color:var(--accent-2); margin-bottom:4px;}
+  .nation-card{
+    background:linear-gradient(160deg,#16223f,#0f1830); border:1px solid #2a3a63; border-radius:16px;
+    padding:18px; margin-bottom:18px;
+  }
+  .nation-card h2{margin:0 0 8px; font-size:19px;}
+  .nation-card .facts{font-size:13px; color:#a9b6da; line-height:1.9;}
+
+  .policy-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+  .policy-card{
+    background:#fff; border-radius:15px; padding:16px 16px; border:2px solid #e2e7f3;
+    cursor:pointer; transition:border-color .15s ease, transform .12s ease;
+  }
+  .policy-card:hover:not(.disabled){border-color:var(--accent); transform:translateY(-2px);}
+  .policy-card.disabled{opacity:.5; cursor:default;}
+  .policy-card.picked{border-color:var(--accent-2); background:#fffaf0;}
+  .policy-card h4{margin:0 0 6px; font-size:16px; color:var(--ink);}
+  .policy-card p{margin:0 0 10px; font-size:13px; color:var(--ink-soft); line-height:1.5;}
+  .effect-tags{display:flex; gap:6px; flex-wrap:wrap;}
+  .etag{font-size:11.5px; font-weight:800; padding:3px 8px; border-radius:999px;}
+  .etag.up{background:#e4fbf3; color:#0a8a63;}
+  .etag.down{background:#fde9ec; color:#c31742;}
+
+  .effect-result{
+    margin-top:18px; padding:16px; border-radius:14px; background:#101a30; border:1px solid #2a3a63;
+  }
+  .effect-result h4{margin:0 0 10px; font-size:15px; color:var(--accent-2);}
+  .delta-row{display:flex; justify-content:space-between; font-size:13.5px; padding:4px 0; color:#dce6ff;}
+  .delta-row b{color:#eef2ff;}
+  .delta-up{color:var(--good); font-weight:800;}
+  .delta-down{color:var(--bad); font-weight:800;}
+  .event-box{
+    margin-top:14px; padding:14px; border-radius:12px; background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.4);
+    font-size:13.5px; color:#ffe3a3; line-height:1.6;
+  }
+  .event-box b{color:var(--accent-2);}
+
+  /* ===== 결과 화면 공통 ===== */
+  .grade-hero{text-align:center; padding:10px 0 6px;}
+  .grade-hero .g-emoji{font-size:56px; display:block;}
+  .grade-hero .g-letter{font-size:38px; font-weight:900; color:var(--ink); margin:6px 0 2px;}
+  .grade-hero .g-msg{font-size:14px; color:var(--ink-soft); line-height:1.6;}
+  .record-box{
+    margin-top:20px; background:#101a30; border:1px solid #2a3a63; border-radius:14px; padding:16px 18px;
+  }
+  .record-box .rb-h{font-size:13px; font-weight:800; color:var(--accent); margin-bottom:10px;}
+  .record-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; text-align:center;}
+  .record-grid .rv{font-size:20px; font-weight:900; color:#eef2ff;}
+  .record-grid .rl{font-size:11px; color:#8b96b8; margin-top:2px;}
+  .tendency-box{
+    margin-top:16px; padding:16px; border-radius:14px; background:#fff7e6; border:1px solid #f4d896; color:#6b4a00;
+  }
+  .tendency-box h4{margin:0 0 6px; font-size:15px;}
+  .tendency-box p{margin:0; font-size:13.5px; line-height:1.6;}
+
+  /* ===== 모달 ===== */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(4,8,20,.72); display:none;
+    align-items:center; justify-content:center; z-index:100; padding:16px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:#fff; color:var(--ink); border-radius:18px; padding:26px 22px; max-width:360px; width:100%;
+    text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  .modal-box h3{margin:0 0 10px; font-size:18px;}
+  .modal-box p{margin:0 0 20px; font-size:14px; color:var(--ink-soft); line-height:1.6;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ 메인 화면 ============ -->
+  <section id="screen-main" class="screen active">
+    <div class="hero">
+      <span class="top-badge">🎮 사회과 인터랙티브 게임</span>
+      <span class="emoji-big">🌏</span>
+      <h1>인구 문제 해결사</h1>
+      <div class="subtitle">"인구의 미래를 바꾸는 건 당신의 선택입니다."</div>
+    </div>
+
+    <div class="name-box">
+      <label for="studentNameInput">👤 이름을 입력하세요</label>
+      <input type="text" id="studentNameInput" maxlength="12" placeholder="예: 김한빛" autocomplete="off">
+      <div class="name-warning" id="nameWarning">⚠️ 이름을 먼저 입력해야 게임을 시작할 수 있어요!</div>
+    </div>
+
+    <div class="game-select">
+      <div class="game-tile" onclick="tryEnterGame('game1')">
+        <div class="gi-icon">🔎</div>
+        <h3>인구 피라미드 판독 게임</h3>
+        <p>6개 국가의 인구 피라미드를 분석해 인구 문제와 해결책을 찾는 탐정 게임 (6라운드)</p>
+      </div>
+      <div class="game-tile" onclick="tryEnterGame('game2')">
+        <div class="gi-icon">🏛️</div>
+        <h3>인구 문제 해결사</h3>
+        <p>20년간 국가의 인구 정책 책임자가 되어 균형 잡힌 정책을 선택하는 시뮬레이션</p>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      📚 중학교 3학년 사회 · 대단원 7. 인구 변화와 인구 문제
+    </div>
+
+    <div class="teacher-corner">
+      <button class="btn btn-ghost" onclick="openTeacherModal()">👩‍🏫 교사용</button>
+    </div>
+  </section>
+
+  <!-- ============ 게임1 플레이 화면 ============ -->
+  <section id="screen-g1" class="screen">
+    <div class="hud">
+      <div class="hud-left">
+        <span class="pill accent" id="g1RoundPill">CASE 01 / 06</span>
+        <span class="pill" id="g1ScorePill">점수 0</span>
+      </div>
+      <button class="btn btn-ghost" onclick="confirmExit()">✕ 나가기</button>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="g1ProgressFill" style="width:0%"></div></div>
+    <div class="spacer-24"></div>
+    <div class="card" id="g1CardBody"><!-- JS로 채워짐 --></div>
+  </section>
+
+  <!-- ============ 게임1 결과 화면 ============ -->
+  <section id="screen-g1-result" class="screen">
+    <div class="card">
+      <div class="grade-hero">
+        <span class="g-emoji" id="g1ResultEmoji">🏆</span>
+        <div class="small" id="g1ResultName">OOO님의 최종 등급</div>
+        <div class="g-letter" id="g1ResultGrade">인구 문제 MASTER</div>
+        <div class="g-msg">최종 점수 <b id="g1ResultScore">0</b>점 / 240점</div>
+      </div>
+      <div class="record-box">
+        <div class="rb-h">🏅 오늘의 기록</div>
+        <div class="record-grid">
+          <div><div class="rv" id="g1RecScore">0</div><div class="rl">내 점수</div></div>
+          <div><div class="rv" id="g1RecCorrect">0/18</div><div class="rl">맞힌 문제</div></div>
+          <div><div class="rv" id="g1RecPerfect">0</div><div class="rl">완벽 분석 라운드</div></div>
+        </div>
+      </div>
+      <div class="spacer-24"></div>
+      <div class="row">
+        <button class="btn btn-primary btn-block" onclick="startGame1(true)">🔁 다시 도전하기</button>
+      </div>
+      <div class="spacer-12"></div>
+      <div class="row">
+        <button class="btn btn-secondary btn-block" onclick="goMain()">🏠 메인으로</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 게임2 플레이 화면 ============ -->
+  <section id="screen-g2" class="screen">
+    <div class="hud">
+      <div class="hud-left">
+        <span class="pill accent" id="g2YearPill">YEAR 0</span>
+        <span class="pill" id="g2RoundPill">1 / 5 라운드</span>
+      </div>
+      <button class="btn btn-ghost" onclick="confirmExit()">✕ 나가기</button>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="g2ProgressFill" style="width:0%"></div></div>
+    <div class="spacer-24"></div>
+
+    <div class="stat-grid" id="g2StatGrid"><!-- JS --></div>
+
+    <div class="card" id="g2CardBody"><!-- JS --></div>
+  </section>
+
+  <!-- ============ 게임2 결과 화면 ============ -->
+  <section id="screen-g2-result" class="screen">
+    <div class="card">
+      <div class="grade-hero">
+        <span class="g-emoji" id="g2ResultEmoji">🏆</span>
+        <div class="small" id="g2ResultName">OOO님의 20년 정책 성적표</div>
+        <div class="g-letter" id="g2ResultGrade">S등급</div>
+        <div class="g-msg" id="g2ResultMsg">인구 정책의 전설!</div>
+      </div>
+
+      <div class="spacer-12"></div>
+      <div class="stat-grid" id="g2ResultStatGrid"><!-- JS --></div>
+
+      <div class="tendency-box">
+        <h4 id="g2TendencyTitle">⚖️ 균형 정책형</h4>
+        <p id="g2TendencyDesc">여러 지표의 균형을 고려한 정책가입니다.</p>
+      </div>
+
+      <div class="record-box">
+        <div class="rb-h">🏅 오늘의 기록</div>
+        <div class="record-grid">
+          <div><div class="rv" id="g2RecScore">0</div><div class="rl">종합 점수</div></div>
+          <div><div class="rv" id="g2RecGrade">S</div><div class="rl">내 등급</div></div>
+          <div><div class="rv" id="g2RecRounds">5/5</div><div class="rl">정책 선택</div></div>
+        </div>
+      </div>
+
+      <div class="spacer-24"></div>
+      <div class="row">
+        <button class="btn btn-primary btn-block" onclick="startGame2(true)">🔁 다시 도전하기</button>
+      </div>
+      <div class="spacer-12"></div>
+      <div class="row">
+        <button class="btn btn-secondary btn-block" onclick="goMain()">🏠 메인으로</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ 이름 필요 모달 ============ -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal-box">
+    <h3>👤 이름이 필요해요</h3>
+    <p>게임을 시작하려면 먼저 이름을 입력해 주세요.</p>
+    <button class="btn btn-primary btn-block" onclick="closeModal('nameModal')">확인</button>
+  </div>
+</div>
+
+<!-- ============ 나가기 확인 모달 ============ -->
+<div class="modal-overlay" id="exitModal">
+  <div class="modal-box">
+    <h3>🚪 게임을 종료할까요?</h3>
+    <p>지금까지의 진행 상황은 저장되지 않고 초기화됩니다.</p>
+    <div class="row">
+      <button class="btn btn-secondary btn-block" onclick="closeModal('exitModal')">계속하기</button>
+      <button class="btn btn-primary btn-block" onclick="doExit()">종료하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 교사용 모달 ============ -->
+<div class="modal-overlay" id="teacherModal">
+  <div class="modal-box">
+    <h3>👩‍🏫 교사용 메뉴</h3>
+    <p>현재 화면의 학생 이름과 진행 상황을 초기화할까요?<br>(수업 중 다음 학생에게 넘길 때 사용하세요)</p>
+    <div class="row">
+      <button class="btn btn-secondary btn-block" onclick="closeModal('teacherModal')">취소</button>
+      <button class="btn btn-primary btn-block" onclick="teacherReset()">초기화</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* =========================================================
+   전역 상태
+========================================================= */
+let studentName = '';
+let g1 = null;   // 게임1 상태
+let g2 = null;   // 게임2 상태
+
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+/* 연타/더블클릭으로 인한 라운드 건너뛰기 방지용 전역 잠금 */
+let uiLocked = false;
+function lockUI(ms){
+  uiLocked = true;
+  setTimeout(function(){ uiLocked = false; }, ms || 260);
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'instant' in window ? 'instant' : 'auto'});
+}
+
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+/* =========================================================
+   메인 화면 / 이름 처리
+========================================================= */
+function tryEnterGame(which){
+  const input = document.getElementById('studentNameInput');
+  const name = input.value.trim();
+  const warn = document.getElementById('nameWarning');
+  if(!name){
+    warn.classList.add('show');
+    openModal('nameModal');
+    input.focus();
+    return;
+  }
+  warn.classList.remove('show');
+  studentName = name.length > 10 ? name.slice(0,10) : name;
+  if(which === 'game1'){ startGame1(false); }
+  else{ startGame2(false); }
+}
+
+let pendingExitTarget = null;
+function confirmExit(){ openModal('exitModal'); }
+function doExit(){
+  closeModal('exitModal');
+  goMain();
+}
+
+function goMain(){
+  g1 = null;
+  g2 = null;
+  showScreen('screen-main');
+}
+
+/* 교사용 */
+function openTeacherModal(){ openModal('teacherModal'); }
+function teacherReset(){
+  closeModal('teacherModal');
+  studentName = '';
+  g1 = null;
+  g2 = null;
+  document.getElementById('studentNameInput').value = '';
+  document.getElementById('nameWarning').classList.remove('show');
+  showScreen('screen-main');
+}
+
+/* =========================================================
+   숫자 카운트업 애니메이션 유틸
+========================================================= */
+function animateNumber(el, from, to, duration, suffix){
+  suffix = suffix || '';
+  const start = performance.now();
+  from = Math.round(from); to = Math.round(to);
+  function tick(now){
+    const p = clamp((now - start) / duration, 0, 1);
+    const eased = 1 - Math.pow(1-p, 2);
+    const val = Math.round(from + (to - from) * eased);
+    el.textContent = val + suffix;
+    if(p < 1){ requestAnimationFrame(tick); }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* =========================================================
+   게임 1 : 인구 피라미드 판독 게임
+========================================================= */
+const G1_SHAPE_OPTIONS = ['🔺 피라미드형', '🔔 종형', '🍺 항아리형', '⚖️ 균형형'];
+const G1_PROBLEM_OPTIONS = ['저출산', '고령화', '급격한 인구 증가', '성비 불균형'];
+
+const G1_CASES = [
+  {
+    id:0, label:'CASE 01',
+    male:[19,16,13,10,7,5,3,2], female:[18,15,12,9,7,5,3,2],
+    shapeCorrect:0,
+    problemCorrect:2,
+    policyOptions:['가족 계획 사업','양육 비용 지원','연금 제도 정비','양성 평등 문화 정착'],
+    policyCorrect:0,
+    reveal:'🇳🇬 나이지리아',
+    exp1:'아래쪽(유소년층)이 매우 넓고 위로 갈수록 급격히 좁아지는 전형적인 피라미드형이에요.',
+    exp2:'출생률이 높고 사망률이 낮아 인구가 빠르게 증가하는 개발도상국형 문제예요.',
+    exp3:'가족계획 사업으로 출산율을 조절하고, 산업·농업 발전으로 인구 부양력을 높이는 것이 중요해요.'
+  },
+  {
+    id:1, label:'CASE 02',
+    male:[4,5,6,7,8,9,10,11], female:[4,5,6,7,8,9,11,14],
+    shapeCorrect:2,
+    problemCorrect:1,
+    policyOptions:['연금 제도 정비','가족 계획 사업','양육 비용 지원','대도시 인구 분산'],
+    policyCorrect:0,
+    reveal:'🇯🇵 일본',
+    exp1:'아래쪽(유소년층)이 좁고 위쪽(노년층)이 넓은 항아리형이에요.',
+    exp2:'노년층 비율이 매우 높고 출생률이 낮아 고령화가 뚜렷하게 나타나요.',
+    exp3:'연금·복지 제도 정비와 노인 경제활동 지원으로 고령 사회에 대응해야 해요.'
+  },
+  {
+    id:2, label:'CASE 03',
+    male:[9,10,11,11,10,9,7,4], female:[9,10,10,11,10,9,8,6],
+    shapeCorrect:1,
+    problemCorrect:0,
+    policyOptions:['양육 비용 지원','노인 돌봄 서비스','가족 계획 사업','양성 평등 문화 정착'],
+    policyCorrect:0,
+    reveal:'🇫🇷 프랑스',
+    exp1:'중간 연령층이 많고 위아래 차이가 크지 않은 종형에 가까워요.',
+    exp2:'출생률 감소가 이어지면서 저출산 대응이 중요한 과제가 되었어요.',
+    exp3:'양육 비용 지원, 보육 시설 확충 등으로 출산과 양육 부담을 줄여주는 정책이 핵심이에요.'
+  },
+  {
+    id:3, label:'CASE 04',
+    male:[12,12,11,10,9,8,6,4], female:[9,9,10,10,9,8,7,6],
+    shapeCorrect:1,
+    problemCorrect:3,
+    policyOptions:['양성 평등 문화 정착','연금 제도 정비','육아 휴직 활성화','대도시 인구 분산'],
+    policyCorrect:0,
+    reveal:'🇨🇳 중국',
+    exp1:'전체적인 형태보다 남녀 비율의 차이를 눈여겨봐야 하는 사례예요.',
+    exp2:'남아 선호 사상 등의 영향으로 남녀 성비가 불균형하게 나타났어요.',
+    exp3:'양성이 평등하다는 문화와 인식을 정착시키는 것이 근본적인 해결책이에요.'
+  },
+  {
+    id:4, label:'CASE 05',
+    male:[16,14,12,10,8,6,4,2], female:[15,13,11,9,8,6,4,3],
+    shapeCorrect:0,
+    problemCorrect:2,
+    policyOptions:['산업 발전','노인 돌봄 서비스','보육 시설 확충','연금 제도 정비'],
+    policyCorrect:0,
+    reveal:'🏳️ 한빛국 (가상 국가)',
+    exp1:'유소년층 비율이 높은 피라미드형으로, 앞으로 생산가능인구가 늘어날 가능성이 커요.',
+    exp2:'현재의 높은 유소년층 비율은 앞으로 인구가 계속 증가할 가능성을 보여줘요.',
+    exp3:'산업 발전으로 늘어나는 노동력을 흡수하고 일자리를 만드는 것이 중요해요.'
+  },
+  {
+    id:5, label:'CASE 06',
+    male:[3,4,5,6,8,10,12,13], female:[3,4,5,6,8,10,13,16],
+    shapeCorrect:2,
+    problemCorrect:0,
+    policyOptions:['보육 시설 확충','산업 발전','가족 계획 사업','양성 평등 문화 정착'],
+    policyCorrect:0,
+    reveal:'🏳️ 미래국 (가상 국가)',
+    exp1:'유소년층이 매우 적고 노년층이 많은 뚜렷한 항아리형이에요.',
+    exp2:'유소년층이 적다는 것은 앞으로 태어나는 아이가 적다는, 즉 저출산 문제의 신호예요.',
+    exp3:'보육 시설 확충 등 출산·양육을 지원하는 정책으로 미래의 노동력 감소에 대비해야 해요.'
+  }
+];
+
+function startGame1(reset){
+  g1 = {
+    round:0,
+    step:1,
+    score:0,
+    correctFlags:[false,false,false],
+    correctCount:0,
+    perfectRounds:0,
+    locked:false
+  };
+  showScreen('screen-g1');
+  renderG1();
+}
+
+function currentCase(){ return G1_CASES[g1.round]; }
+
+function renderG1(){
+  const c = currentCase();
+  document.getElementById('g1RoundPill').textContent = c.label + ' / 06';
+  document.getElementById('g1ScorePill').textContent = '점수 ' + g1.score;
+  const progressPct = Math.round(((g1.round) / 6) * 100 + (g1.step-1)/3 * (100/6));
+  document.getElementById('g1ProgressFill').style.width = clamp(progressPct,0,100) + '%';
+
+  const body = document.getElementById('g1CardBody');
+  g1.locked = false;
+
+  if(g1.step === 1){
+    body.innerHTML =
+      '<div class="case-tag">🕵️ ' + c.label + '</div>' +
+      '<div class="case-lead">"이 나라의 인구 구조를 분석하라."</div>' +
+      buildPyramidSVG(c) +
+      '<div class="q-title">Q1. 이 국가의 인구 구조는 어떤 형태에 가까울까요?</div>' +
+      buildOptions(G1_SHAPE_OPTIONS, 1) +
+      '<div class="feedback-box" id="g1Feedback"></div>' +
+      '<div class="spacer-12"></div>' +
+      '<button class="btn btn-primary btn-block" id="g1NextBtn" style="display:none" onclick="nextG1Step()">다음 →</button>';
+  } else if(g1.step === 2){
+    body.innerHTML =
+      '<div class="case-tag">🕵️ ' + c.label + '</div>' +
+      '<div class="case-lead">"이 국가에서 나타날 가능성이 가장 높은 인구 문제는?"</div>' +
+      buildPyramidSVG(c, true) +
+      '<div class="q-title">Q2. 가장 가능성이 높은 인구 문제를 고르세요.</div>' +
+      buildOptions(G1_PROBLEM_OPTIONS, 2) +
+      '<div class="feedback-box" id="g1Feedback"></div>' +
+      '<div class="spacer-12"></div>' +
+      '<button class="btn btn-primary btn-block" id="g1NextBtn" style="display:none" onclick="nextG1Step()">다음 →</button>';
+  } else {
+    body.innerHTML =
+      '<div class="case-tag">🕵️ ' + c.label + '</div>' +
+      '<div class="case-lead">"이 문제에 대응하기 위한 정책으로 가장 적절한 것은?"</div>' +
+      '<div class="q-title">Q3. 가장 적절한 해결 정책을 고르세요.</div>' +
+      buildOptions(c.policyOptions, 3) +
+      '<div class="feedback-box" id="g1Feedback"></div>' +
+      '<div class="reveal-box" id="g1Reveal" style="display:none"></div>' +
+      '<div class="spacer-12"></div>' +
+      '<button class="btn btn-primary btn-block" id="g1NextBtn" style="display:none" onclick="nextG1Step()">' +
+      (g1.round === 5 ? '결과 확인하기 →' : '다음 라운드 →') + '</button>';
+  }
+}
+
+function buildOptions(list, stepNum){
+  let html = '<div class="options">';
+  for(let i=0;i<list.length;i++){
+    html += '<button class="opt-btn" id="g1opt_' + i + '" onclick="selectG1Option(' + stepNum + ',' + i + ')">' +
+      '<span>' + list[i] + '</span><span class="opt-mark" id="g1mark_' + i + '"></span></button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function selectG1Option(stepNum, idx){
+  if(g1.locked) return; // 중복 클릭 방지 (버튼 disabled로도 이중 보호됨)
+  if(stepNum !== g1.step) return; // 안전장치
+  g1.locked = true;
+
+  const c = currentCase();
+  let correctIdx, expText;
+  if(stepNum === 1){ correctIdx = c.shapeCorrect; expText = c.exp1; }
+  else if(stepNum === 2){ correctIdx = c.problemCorrect; expText = c.exp2; }
+  else { correctIdx = c.policyCorrect; expText = c.exp3; }
+
+  const isCorrect = (idx === correctIdx);
+  g1.correctFlags[stepNum-1] = isCorrect;
+  if(isCorrect){ g1.score += 10; g1.correctCount++; }
+
+  // 옵션 버튼 잠금 + 표시
+  const total = (stepNum === 3) ? c.policyOptions.length : (stepNum === 1 ? G1_SHAPE_OPTIONS.length : G1_PROBLEM_OPTIONS.length);
+  for(let i=0;i<total;i++){
+    const btn = document.getElementById('g1opt_' + i);
+    const mark = document.getElementById('g1mark_' + i);
+    btn.disabled = true;
+    if(i === correctIdx){ btn.classList.add('correct'); mark.textContent = '✓'; }
+    else if(i === idx){ btn.classList.add('wrong'); mark.textContent = '✕'; }
+    else{ btn.classList.add('dim'); }
+  }
+
+  const fb = document.getElementById('g1Feedback');
+  fb.className = 'feedback-box show ' + (isCorrect ? 'ok' : 'no');
+  fb.innerHTML = (isCorrect ? '✓ 정답이에요! ' : '✕ 아쉬워요. ') + expText;
+
+  document.getElementById('g1ScorePill').textContent = '점수 ' + g1.score;
+
+  if(stepNum === 3){
+    const allCorrect = g1.correctFlags[0] && g1.correctFlags[1] && g1.correctFlags[2];
+    if(allCorrect){ g1.score += 10; g1.perfectRounds++; }
+    const rb = document.getElementById('g1Reveal');
+    rb.style.display = 'block';
+    rb.innerHTML =
+      '<div class="rb-title">🔓 분석 결과</div>' +
+      '<div class="rb-name">' + c.reveal + '</div>' +
+      (allCorrect ? '<div class="rb-score">🎯 완벽한 분석! +10 보너스 점수</div>' : '<div class="rb-score">다음 라운드에서 다시 도전해봐요</div>');
+    document.getElementById('g1ScorePill').textContent = '점수 ' + g1.score;
+  }
+
+  document.getElementById('g1NextBtn').style.display = 'inline-flex';
+}
+
+function nextG1Step(){
+  if(uiLocked) return;
+  if(!g1.locked) return; // 선택하지 않은 상태에서는 진행 불가
+  lockUI();
+  if(g1.step < 3){
+    g1.step += 1;
+    g1.correctFlags = g1.correctFlags; // 유지
+    renderG1();
+  } else {
+    if(g1.round < 5){
+      g1.round += 1;
+      g1.step = 1;
+      g1.correctFlags = [false,false,false];
+      renderG1();
+    } else {
+      showGame1Result();
+    }
+  }
+}
+
+function showGame1Result(){
+  const score = g1.score;
+  let grade, emoji;
+  if(score >= 220){ grade='🏆 인구 문제 MASTER'; emoji='🏆'; }
+  else if(score >= 190){ grade='🥇 인구 분석 전문가'; emoji='🥇'; }
+  else if(score >= 150){ grade='🥈 인구 분석가'; emoji='🥈'; }
+  else if(score >= 100){ grade='🥉 인구 탐정 수습생'; emoji='🥉'; }
+  else{ grade='🔍 인구 탐정 도전 중'; emoji='🔍'; }
+
+  document.getElementById('g1ResultEmoji').textContent = emoji;
+  document.getElementById('g1ResultName').textContent = studentName + '님의 최종 등급';
+  document.getElementById('g1ResultGrade').textContent = grade;
+  document.getElementById('g1ResultScore').textContent = score;
+  document.getElementById('g1RecScore').textContent = score;
+  document.getElementById('g1RecCorrect').textContent = g1.correctCount + '/18';
+  document.getElementById('g1RecPerfect').textContent = g1.perfectRounds;
+
+  showScreen('screen-g1-result');
+}
+
+/* ---- 인구 피라미드 SVG 생성 ---- */
+const AGE_LABELS = ['0~9세','10~19세','20~29세','30~39세','40~49세','50~59세','60~69세','70세 이상'];
+function buildPyramidSVG(c, compact){
+  const w = 640, h = compact ? 250 : 300;
+  const rows = 8;
+  const topPad = 14, bottomPad = 26;
+  const rowH = (h - topPad - bottomPad) / rows;
+  const midX = w/2;
+  const maxVal = 20;
+  const halfW = w/2 - 70; // 라벨 공간 확보
+  const scale = halfW / maxVal;
+
+  let bars = '';
+  for(let i=0;i<rows;i++){
+    const y = topPad + i*rowH;
+    const mLen = clamp(c.male[i],0,maxVal) * scale;
+    const fLen = clamp(c.female[i],0,maxVal) * scale;
+    bars += '<rect x="' + (midX - mLen) + '" y="' + (y+3) + '" width="' + mLen + '" height="' + (rowH-6) + '" rx="3" fill="#3b82f6"></rect>';
+    bars += '<rect x="' + midX + '" y="' + (y+3) + '" width="' + fLen + '" height="' + (rowH-6) + '" rx="3" fill="#ec4899"></rect>';
+    bars += '<text x="' + midX + '" y="' + (y + rowH/2 + 4) + '" text-anchor="middle" font-size="10.5" fill="#5b6478" font-weight="700">' + AGE_LABELS[i] + '</text>';
+  }
+  bars += '<line x1="' + midX + '" y1="' + topPad + '" x2="' + midX + '" y2="' + (h-bottomPad) + '" stroke="#d7deef" stroke-width="1"></line>';
+
+  return '<div class="pyramid-wrap"><svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + (compact?190:230) + '" xmlns="http://www.w3.org/2000/svg">' + bars + '</svg>' +
+    '<div class="pyramid-legend"><span class="legend-m">◀ 남성</span><span class="legend-f">여성 ▶</span></div></div>';
+}
+
+/* =========================================================
+   게임 2 : 인구 문제 해결사 (정책 시뮬레이션)
+========================================================= */
+const G2_POLICIES = {
+  careCost:{name:'양육 비용 지원', icon:'💰', desc:'자녀 양육에 드는 경제적 부담을 줄입니다.', cat:'low', effect:{birth:10, happiness:8, finance:-12}},
+  daycare:{name:'보육 시설 확충', icon:'🏫', desc:'국공립 보육 시설을 늘려 양육 환경을 개선합니다.', cat:'low', effect:{birth:7, happiness:7, finance:-10}},
+  parentalLeave:{name:'육아 휴직 활성화', icon:'👨‍👩‍👧', desc:'부모가 눈치 보지 않고 육아휴직을 쓸 수 있게 합니다.', cat:'low', effect:{birth:6, happiness:8, labor:3, finance:-8}},
+  elderlyWork:{name:'노인 경제 활동 지원', icon:'👴', desc:'고령층의 재취업과 경제 활동을 지원합니다.', cat:'aging', effect:{labor:10, happiness:5, aging:-5, finance:-5}},
+  pension:{name:'연금 제도 정비', icon:'💳', desc:'노후 소득을 보장하는 연금 제도를 정비합니다.', cat:'aging', effect:{happiness:10, aging:-5, finance:-12}},
+  elderlyCare:{name:'노인 돌봄 서비스', icon:'🏥', desc:'거동이 불편한 어르신을 위한 돌봄 서비스를 확대합니다.', cat:'aging', effect:{happiness:9, aging:-7, finance:-10}},
+  urbanDistribution:{name:'대도시 인구 분산', icon:'🏙️', desc:'수도권 인구를 지방으로 분산시켜 주거·환경 부담을 줄입니다.', cat:'growth', effect:{happiness:5, finance:-7}},
+  immigration:{name:'이민자 유입 확대', icon:'🌏', desc:'외국인 노동력을 받아들여 노동력 부족을 보완합니다.', cat:'growth', effect:{labor:12, birth:5, happiness:-2}},
+  industry:{name:'산업 발전', icon:'🏭', desc:'새로운 산업을 육성해 노동력을 흡수하고 경제를 키웁니다.', cat:'growth', effect:{labor:10, finance:-10}}
+};
+
+const G2_ROUNDS = [
+  ['careCost','daycare','parentalLeave'],
+  ['elderlyWork','pension','elderlyCare'],
+  ['urbanDistribution','immigration','industry'],
+  ['careCost','pension','immigration'],
+  ['elderlyCare','parentalLeave','industry']
+];
+
+const G2_EVENTS = [
+  {title:'📢 갑작스러운 경기 침체!', desc:'경제 상황이 악화되어 국가 재정에 영향을 미쳤습니다.', effect:{finance:-8}},
+  {title:'📢 새로운 육아 지원 정책에 대한 국민 관심 증가!', desc:'국민들이 육아 지원 정책에 큰 관심을 보이고 있습니다.', effect:{happiness:5}},
+  {title:'📢 자동화 기술 발전!', desc:'자동화 기술 발전으로 노동력 부족 문제가 완화되었습니다.', effect:{labor:5, aging:-5}}
+];
+
+const METRIC_META = {
+  happiness:{icon:'❤️', label:'행복도', good:true},
+  finance:{icon:'💰', label:'재정', good:true},
+  labor:{icon:'👷', label:'노동력', good:true},
+  birth:{icon:'👶', label:'출생률', good:true},
+  aging:{icon:'👵', label:'고령화 부담', good:false}
+};
+
+function startGame2(reset){
+  g2 = {
+    round:0, // 0~4
+    metrics:{happiness:70, finance:70, labor:45, birth:35, aging:65},
+    picks:[], // policyId 기록
+    locked:false,
+    eventShownRounds:{1:true, 3:true} // round index 1(두번째),3(네번째) 이후 이벤트
+  };
+  showScreen('screen-g2');
+  renderG2();
+}
+
+function renderG2Stats(targetId, metrics){
+  const grid = document.getElementById(targetId);
+  let html = '';
+  ['happiness','finance','labor','birth','aging'].forEach(function(key){
+    const meta = METRIC_META[key];
+    const val = Math.round(metrics[key]);
+    const barColor = meta.good ? (val>=55 ? '#2dd4a7' : (val>=35?'#fbbf24':'#f43f5e')) : (val<=45 ? '#2dd4a7' : (val<=65?'#fbbf24':'#f43f5e'));
+    html += '<div class="stat-box"><div class="si">' + meta.icon + '</div>' +
+      '<div class="sv" id="' + targetId + '_' + key + '">' + val + '</div>' +
+      '<div class="sl">' + meta.label + '</div>' +
+      '<div class="stat-bar-track"><div class="stat-bar-fill" style="width:' + val + '%; background:' + barColor + '"></div></div></div>';
+  });
+  grid.innerHTML = html;
+}
+
+function renderG2(){
+  document.getElementById('g2YearPill').textContent = 'YEAR ' + (g2.round * 4);
+  document.getElementById('g2RoundPill').textContent = (g2.round+1) + ' / 5 라운드';
+  document.getElementById('g2ProgressFill').style.width = Math.round((g2.round/5)*100) + '%';
+  renderG2Stats('g2StatGrid', g2.metrics);
+
+  g2.locked = false;
+  const ids = G2_ROUNDS[g2.round];
+  let cardsHtml = '<div class="year-title">🏛️ YEAR ' + (g2.round*4) + ' ~ ' + (g2.round*4+4) + '</div>' +
+    '<div class="q-title" style="margin-top:2px;">이번 4년, 어떤 정책을 시행할까요?</div>' +
+    '<div class="policy-grid">';
+  ids.forEach(function(pid){
+    const p = G2_POLICIES[pid];
+    cardsHtml += '<div class="policy-card" id="g2card_' + pid + '" onclick="selectG2Policy(\'' + pid + '\')">' +
+      '<h4>' + p.icon + ' ' + p.name + '</h4><p>' + p.desc + '</p>' +
+      '<div class="effect-tags">' + buildEffectTags(p.effect) + '</div></div>';
+  });
+  cardsHtml += '</div>' +
+    '<div class="effect-result" id="g2EffectResult" style="display:none"></div>' +
+    '<div class="spacer-12"></div>' +
+    '<button class="btn btn-primary btn-block" id="g2NextBtn" style="display:none" onclick="nextG2Year()">' +
+    (g2.round === 4 ? '최종 결과 확인하기 →' : '다음 4년으로 이동 →') + '</button>';
+
+  document.getElementById('g2CardBody').innerHTML = cardsHtml;
+}
+
+function buildEffectTags(effect){
+  let html = '';
+  Object.keys(effect).forEach(function(key){
+    const meta = METRIC_META[key];
+    const v = effect[key];
+    const isGoodDirection = meta.good ? (v>0) : (v<0);
+    const sign = v>0 ? '+' + v : String(v);
+    html += '<span class="etag ' + (isGoodDirection?'up':'down') + '">' + meta.icon + ' ' + sign + '</span>';
+  });
+  return html;
+}
+
+function selectG2Policy(pid){
+  if(g2.locked) return; // 중복 클릭 방지 (카드 disabled로도 이중 보호됨)
+  g2.locked = true;
+  g2.picks.push(pid);
+
+  const p = G2_POLICIES[pid];
+  const before = Object.assign({}, g2.metrics);
+
+  // 카드 UI 잠금
+  const ids = G2_ROUNDS[g2.round];
+  ids.forEach(function(otherId){
+    const card = document.getElementById('g2card_' + otherId);
+    card.classList.add('disabled');
+    card.onclick = null;
+    if(otherId === pid){ card.classList.add('picked'); }
+  });
+
+  // 효과 적용
+  Object.keys(p.effect).forEach(function(key){
+    g2.metrics[key] = clamp(g2.metrics[key] + p.effect[key], 0, 100);
+  });
+
+  let resultHtml = '<h4>🎉 정책 시행 완료! ' + p.icon + ' ' + p.name + '</h4>';
+  Object.keys(p.effect).forEach(function(key){
+    const meta = METRIC_META[key];
+    const delta = g2.metrics[key] - before[key];
+    const cls = delta === 0 ? '' : (meta.good ? (delta>0?'delta-up':'delta-down') : (delta<0?'delta-up':'delta-down'));
+    resultHtml += '<div class="delta-row"><span>' + meta.icon + ' ' + meta.label + '</span><b class="' + cls + '">' + (delta>=0?'+':'') + delta + '</b></div>';
+  });
+
+  // 랜덤 이벤트 (지정된 라운드 이후 1회)
+  let eventFired = false;
+  if(g2.eventShownRounds[g2.round]){
+    eventFired = true;
+    const ev = G2_EVENTS[Math.floor(Math.random()*G2_EVENTS.length)];
+    Object.keys(ev.effect).forEach(function(key){
+      g2.metrics[key] = clamp(g2.metrics[key] + ev.effect[key], 0, 100);
+    });
+    resultHtml += '<div class="event-box"><b>' + ev.title + '</b><br>' + ev.desc + '</div>';
+  }
+
+  const box = document.getElementById('g2EffectResult');
+  box.style.display = 'block';
+  box.innerHTML = resultHtml;
+
+  renderG2Stats('g2StatGrid', g2.metrics);
+  document.getElementById('g2NextBtn').style.display = 'inline-flex';
+}
+
+function nextG2Year(){
+  if(uiLocked) return;
+  if(!g2.locked) return; // 정책을 선택하지 않은 상태에서는 진행 불가
+  lockUI();
+  if(g2.round < 4){
+    g2.round += 1;
+    renderG2();
+  } else {
+    showGame2Result();
+  }
+}
+
+function showGame2Result(){
+  const m = g2.metrics;
+  const agingScore = 100 - m.aging;
+  const goods = [m.happiness, m.finance, m.labor, m.birth, agingScore];
+  const avg = goods.reduce(function(a,b){return a+b;},0) / goods.length;
+  const allHigh = goods.every(function(v){ return v>=70; });
+
+  let grade, emoji, msg;
+  if(allHigh){ grade='S등급'; emoji='🏆'; msg='인구 정책의 전설! 여러 인구 문제를 균형 있게 해결했습니다.'; }
+  else if(avg>=70){ grade='A등급'; emoji='🌟'; msg='최고의 인구 정책가! 대부분의 문제를 효과적으로 해결했습니다.'; }
+  else if(avg>=55){ grade='B등급'; emoji='👍'; msg='훌륭한 정책가! 일부 문제는 해결했지만 개선할 부분이 있습니다.'; }
+  else if(avg>=40){ grade='C등급'; emoji='🤔'; msg='아직 정책 조정이 필요합니다. 특정 문제에만 집중하지 않았는지 생각해 보세요.'; }
+  else{ grade='D등급'; emoji='🚨'; msg='국가 비상사태! 인구 문제의 균형 잡힌 해결이 필요합니다.'; }
+
+  // 정책 성향 분석
+  let lowCount=0, agingCount=0, growthCount=0;
+  g2.picks.forEach(function(pid){
+    const cat = G2_POLICIES[pid].cat;
+    if(cat==='low') lowCount++;
+    else if(cat==='aging') agingCount++;
+    else growthCount++;
+  });
+
+  let tTitle, tDesc;
+  if(m.finance >= 75){
+    tTitle = '💰 재정 중심형';
+    tDesc = '재정을 안정적으로 유지했지만 인구 문제 해결에는 다소 소극적이었습니다.';
+  } else if(lowCount >= 3){
+    tTitle = '👶 출산 지원 중심형';
+    tDesc = '출생률을 적극적으로 높였지만 국가 재정 부담이 커졌습니다.';
+  } else if(agingCount >= 3){
+    tTitle = '👴 고령화 대응형';
+    tDesc = '노년층 지원에 적극적이었습니다.';
+  } else {
+    tTitle = '⚖️ 균형 정책형';
+    tDesc = '여러 지표의 균형을 고려한 정책 운영을 했습니다.';
+  }
+
+  document.getElementById('g2ResultEmoji').textContent = emoji;
+  document.getElementById('g2ResultName').textContent = studentName + '님의 20년 정책 성적표';
+  document.getElementById('g2ResultGrade').textContent = grade;
+  document.getElementById('g2ResultMsg').textContent = msg;
+  renderG2Stats('g2ResultStatGrid', g2.metrics);
+  document.getElementById('g2TendencyTitle').textContent = tTitle;
+  document.getElementById('g2TendencyDesc').textContent = tDesc;
+
+  document.getElementById('g2RecScore').textContent = Math.round(avg);
+  document.getElementById('g2RecGrade').textContent = grade.replace('등급','');
+  document.getElementById('g2RecRounds').textContent = g2.picks.length + '/5';
+
+  showScreen('screen-g2-result');
+}
+
+/* =========================================================
+   초기화 (엔터키로 이름 입력 후 진입 방지 -> 그냥 포커스만)
+========================================================= */
+document.getElementById('studentNameInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); }
+});
+document.getElementById('studentNameInput').addEventListener('input', function(){
+  document.getElementById('nameWarning').classList.remove('show');
+});
+</script>
+</body>
+</html>
